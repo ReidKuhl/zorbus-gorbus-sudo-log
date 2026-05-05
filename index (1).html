@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sudo — Hognose Care Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2ee;
+    --bg2: #edeae4;
+    --surface: #ffffff;
+    --border: #ddd8d0;
+    --text: #2a2420;
+    --text-muted: #8a7e74;
+    --text-light: #b8afa6;
+    --pink: #d4847a;
+    --pink-light: #e8b4ae;
+    --pink-pale: #f5e8e6;
+    --green: #6b8c6e;
+    --green-light: #9ab89d;
+    --green-pale: #e8f0e8;
+    --grey: #8a8e90;
+    --grey-light: #c8ccce;
+    --grey-pale: #f0f2f3;
+    --charcoal: #3a3e42;
+    --shadow: 0 2px 20px rgba(42,36,32,0.08);
+    --shadow-lg: 0 8px 40px rgba(42,36,32,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* Subtle grain texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* Header */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-snake {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--grey-pale), var(--grey-light));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border: 2px solid var(--border);
+  }
+
+  .logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--charcoal);
+    letter-spacing: 0.02em;
+  }
+
+  .logo-sub {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: -4px;
+  }
+
+  nav {
+    display: flex;
+    gap: 4px;
+  }
+
+  .nav-btn {
+    padding: 6px 14px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover { background: var(--bg); color: var(--text); }
+  .nav-btn.active {
+    background: var(--pink-pale);
+    border-color: var(--pink-light);
+    color: var(--pink);
+  }
+
+  /* Main layout */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Pages */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Dashboard */
+  .dashboard-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dashboard-hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, var(--pink-pale) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .dashboard-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; left: 20%;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, var(--green-pale) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: var(--charcoal);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .hero-name em {
+    font-style: italic;
+    color: var(--pink);
+  }
+
+  .hero-species {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .hero-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .tag-pink { background: var(--pink-pale); color: var(--pink); border: 1px solid var(--pink-light); }
+  .tag-green { background: var(--green-pale); color: var(--green); border: 1px solid var(--green-light); }
+  .tag-grey { background: var(--grey-pale); color: var(--grey); border: 1px solid var(--grey-light); }
+
+  .hero-emoji {
+    font-size: 5rem;
+    opacity: 0.15;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+  }
+
+  .stat-card:hover { transform: translateY(-2px); }
+
+  .stat-label {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--charcoal);
+    line-height: 1;
+  }
+
+  .stat-unit {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+
+  .stat-sub {
+    font-size: 0.6rem;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+
+  .stat-card.pink { border-top: 3px solid var(--pink-light); }
+  .stat-card.green { border-top: 3px solid var(--green-light); }
+  .stat-card.grey { border-top: 3px solid var(--grey-light); }
+  .stat-card.charcoal { border-top: 3px solid var(--charcoal); }
+
+  /* Two col layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Quick log */
+  .quick-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .quick-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+  }
+
+  .quick-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-pink { background: var(--pink); }
+  .dot-green { background: var(--green); }
+  .dot-grey { background: var(--grey); }
+
+  .quick-item-date { color: var(--text-muted); margin-left: auto; font-size: 0.6rem; }
+
+  /* Care status */
+  .care-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .care-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+  }
+
+  .care-status {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .status-good { background: var(--green-pale); color: var(--green); }
+  .status-due { background: var(--pink-pale); color: var(--pink); }
+  .status-ok { background: var(--grey-pale); color: var(--grey); }
+
+  /* Forms */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  input, select, textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--pink-light);
+    background: var(--surface);
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--pink);
+    color: white;
+  }
+  .btn-primary:hover { background: #c4746a; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+
+  .btn-green {
+    background: var(--green);
+    color: white;
+  }
+  .btn-green:hover { background: #5a7a5d; }
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.6rem;
+  }
+
+  /* Log entries */
+  .log-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .log-entries::-webkit-scrollbar { width: 4px; }
+  .log-entries::-webkit-scrollbar-track { background: var(--bg); }
+  .log-entries::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .log-entry {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: start;
+    transition: border-color 0.2s;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .log-entry:hover { border-color: var(--pink-light); }
+
+  .entry-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .icon-feed { background: var(--pink-pale); }
+  .icon-weight { background: var(--grey-pale); }
+  .icon-shed { background: var(--green-pale); }
+  .icon-health { background: #fef3e2; }
+  .icon-note { background: var(--bg2); }
+
+  .entry-content {}
+  .entry-title { font-size: 0.75rem; color: var(--text); margin-bottom: 2px; }
+  .entry-detail { font-size: 0.65rem; color: var(--text-muted); }
+  .entry-date { font-size: 0.6rem; color: var(--text-light); white-space: nowrap; }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-light);
+    font-size: 12px;
+    padding: 2px;
+    transition: color 0.2s;
+  }
+  .delete-btn:hover { color: var(--pink); }
+
+  /* Page sections */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--charcoal);
+  }
+
+  /* Care guide */
+  .care-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .care-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .care-card-icon {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+
+  .care-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    color: var(--charcoal);
+    margin-bottom: 10px;
+  }
+
+  .care-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .care-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .care-row:last-child { border-bottom: none; }
+  .care-row .cr-label { color: var(--text-muted); }
+  .care-row .cr-val { color: var(--text); font-weight: 500; }
+
+  /* Feeding chart */
+  .chart-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.7rem;
+  }
+
+  .chart-table th {
+    background: var(--bg2);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .chart-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .chart-table tr:last-child td { border-bottom: none; }
+  .chart-table tr.current-row { background: var(--pink-pale); }
+  .chart-table tr.current-row td { color: var(--pink); font-weight: 500; }
+
+  .current-badge {
+    background: var(--pink);
+    color: white;
+    font-size: 0.5rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-left: 6px;
+  }
+
+  /* Weight chart */
+  .weight-chart {
+    width: 100%;
+    height: 150px;
+    position: relative;
+    margin-top: 8px;
+  }
+
+  .weight-chart svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Profile */
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 24px;
+  }
+
+  .profile-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--grey-pale), var(--grey-light));
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    border: 3px solid var(--border);
+  }
+
+  .profile-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    color: var(--charcoal);
+    margin-bottom: 4px;
+  }
+
+  .profile-species {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .profile-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .profile-stat {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .profile-stat:last-child { border-bottom: none; }
+  .profile-stat .ps-label { color: var(--text-muted); }
+
+  .profile-fields {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+
+  /* Alerts */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .alert-pink { background: var(--pink-pale); color: var(--pink); border: 1px solid var(--pink-light); }
+  .alert-green { background: var(--green-pale); color: var(--green); border: 1px solid var(--green-light); }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+  }
+
+  .empty-state .es-icon { font-size: 2rem; margin-bottom: 8px; }
+  .empty-state .es-text { font-size: 0.7rem; }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .care-grid { grid-template-columns: 1fr; }
+    .profile-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    nav { display: none; }
+  }
+
+  /* Floral decoration */
+  .floral {
+    color: var(--pink-light);
+    font-size: 0.8rem;
+    opacity: 0.6;
+  }
+
+  /* Next feeding countdown */
+  .countdown {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    color: var(--pink);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-snake">🐍</div>
+      <div>
+        <div class="logo-text">Sudo <span class="floral">✿</span></div>
+        <div class="logo-sub">Hognose Care Log</div>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="showPage('feeding')">Feeding</button>
+      <button class="nav-btn" onclick="showPage('weight')">Weight</button>
+      <button class="nav-btn" onclick="showPage('care')">Care</button>
+      <button class="nav-btn" onclick="showPage('guide')">Guide</button>
+      <button class="nav-btn" onclick="showPage('profile')">Profile</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="dashboard-hero">
+      <div>
+        <div class="hero-name"><em>Sudo</em></div>
+        <div class="hero-species">Western Hognose Snake · Heterodon nasicus nasicus</div>
+        <div class="hero-tags">
+          <span class="tag tag-grey">Axanthic Conda</span>
+          <span class="tag tag-pink">66% Het Albino</span>
+          <span class="tag tag-green">Purple Line</span>
+          <span class="tag tag-grey">Male</span>
+          <span class="tag tag-pink">Captive Bred</span>
+        </div>
+      </div>
+      <div class="hero-emoji">🐍</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card pink">
+        <div class="stat-label">Current Weight</div>
+        <div class="stat-value" id="dash-weight">—<span class="stat-unit">g</span></div>
+        <div class="stat-sub" id="dash-weight-date">No weight logged</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Next Feeding</div>
+        <div class="countdown" id="dash-next-feed">—</div>
+        <div class="stat-sub" id="dash-last-feed">No feeding logged</div>
+      </div>
+      <div class="stat-card grey">
+        <div class="stat-label">Total Feedings</div>
+        <div class="stat-value" id="dash-total-feeds">0</div>
+        <div class="stat-sub">meals logged</div>
+      </div>
+      <div class="stat-card charcoal">
+        <div class="stat-label">Last Shed</div>
+        <div class="stat-value" id="dash-last-shed" style="font-size:1rem;padding-top:6px;">—</div>
+        <div class="stat-sub" id="dash-shed-days">No shed logged</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div class="quick-items" id="recent-activity">
+          <div class="empty-state">
+            <div class="es-icon">✿</div>
+            <div class="es-text">No activity logged yet</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Care Checklist</div>
+        <div class="care-items">
+          <div class="care-item">
+            <span>💧 Fresh Water</span>
+            <span class="care-status status-ok" id="check-water">Check Daily</span>
+          </div>
+          <div class="care-item">
+            <span>🌡️ Temperature Check</span>
+            <span class="care-status status-ok">Check Daily</span>
+          </div>
+          <div class="care-item">
+            <span>💨 Humidity Check</span>
+            <span class="care-status status-ok">30–50%</span>
+          </div>
+          <div class="care-item">
+            <span>🧹 Spot Clean</span>
+            <span class="care-status status-ok">As Needed</span>
+          </div>
+          <div class="care-item">
+            <span>🐭 Next Feeding</span>
+            <span class="care-status status-due" id="check-feed">See Schedule</span>
+          </div>
+          <div class="care-item">
+            <span>📊 Weigh Sudo</span>
+            <span class="care-status status-ok">Every 2 Weeks</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Quick Log <span style="color:var(--text-light);font-size:0.6rem;">Add a quick note</span></div>
+      <div style="display:flex;gap:10px;align-items:flex-end;">
+        <div class="form-group" style="flex:1;">
+          <label>Note</label>
+          <input type="text" id="quick-note" placeholder="e.g. Sudo was active today, explored the whole enclosure...">
+        </div>
+        <button class="btn btn-secondary" onclick="addQuickNote()">Log Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEEDING LOG -->
+  <div id="page-feeding" class="page">
+    <div class="section-header">
+      <div class="section-title">Feeding Log</div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:24px;">
+      <div class="card">
+        <div class="card-title">Log a Feeding</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="feed-date">
+          </div>
+          <div class="form-group">
+            <label>Prey Type</label>
+            <select id="feed-prey">
+              <option>Small Pinky (2–3g)</option>
+              <option>Pinky (3–4g)</option>
+              <option>Large Pinky</option>
+              <option>Small Fuzzy (5–7g)</option>
+              <option>Regular Fuzzy (7–9g)</option>
+              <option>Hopper (9–12g)</option>
+              <option>Weanling (13–20g)</option>
+              <option>Small Adult Mouse</option>
+              <option>Adult Mouse</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Result</label>
+            <select id="feed-result">
+              <option value="ate">✅ Ate</option>
+              <option value="refused">❌ Refused</option>
+              <option value="partial">⚠️ Partial</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Sudo's Weight (g)</label>
+            <input type="number" id="feed-weight" placeholder="e.g. 12">
+          </div>
+          <div class="form-group full">
+            <label>Notes</label>
+            <textarea id="feed-notes" placeholder="e.g. Struck immediately, good feeding response..."></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="logFeeding()">Log Feeding</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Feeding Schedule Reference</div>
+        <table class="chart-table">
+          <thead>
+            <tr>
+              <th>Snake Size</th>
+              <th>Prey Size</th>
+              <th>Frequency</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="current-row">
+              <td>4–15g <span class="current-badge">Sudo</span></td>
+              <td>Sm. Pinky (2–3g)</td>
+              <td>Every 5d</td>
+            </tr>
+            <tr><td>16–23g</td><td>Pinky (3–4g)</td><td>Every 5d</td></tr>
+            <tr><td>24–30g</td><td>Sm. Fuzzy</td><td>Every 5–6d</td></tr>
+            <tr><td>31–50g</td><td>Reg. Fuzzy</td><td>Every 5–6d</td></tr>
+            <tr><td>51–90g</td><td>Hopper</td><td>Every 6–7d</td></tr>
+            <tr><td>91–170g</td><td>Weanling</td><td>Every 7d</td></tr>
+            <tr><td>170g+</td><td>Adult Mouse</td><td>Every 7–10d</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Feeding History</div>
+      <div class="log-entries" id="feeding-log">
+        <div class="empty-state">
+          <div class="es-icon">🐭</div>
+          <div class="es-text">No feedings logged yet. Log Sudo's first meal above!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEIGHT LOG -->
+  <div id="page-weight" class="page">
+    <div class="section-header">
+      <div class="section-title">Weight Tracker</div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:24px;">
+      <div class="card">
+        <div class="card-title">Log Weight</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="weight-date">
+          </div>
+          <div class="form-group">
+            <label>Weight (grams)</label>
+            <input type="number" id="weight-value" placeholder="e.g. 12">
+          </div>
+          <div class="form-group full">
+            <label>Notes</label>
+            <input type="text" id="weight-notes" placeholder="e.g. Before feeding, looking healthy...">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="logWeight()">Log Weight</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Growth Chart</div>
+        <div class="weight-chart" id="weight-chart-container">
+          <div class="empty-state">
+            <div class="es-icon">📈</div>
+            <div class="es-text">Log at least 2 weights to see chart</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Weight History</div>
+      <div class="log-entries" id="weight-log">
+        <div class="empty-state">
+          <div class="es-icon">⚖️</div>
+          <div class="es-text">No weights logged yet. Weigh Sudo every 2 weeks!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARE LOG -->
+  <div id="page-care" class="page">
+    <div class="section-header">
+      <div class="section-title">Care Log</div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:24px;">
+      <div class="card">
+        <div class="card-title">Log Care Event</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="care-date">
+          </div>
+          <div class="form-group">
+            <label>Event Type</label>
+            <select id="care-type">
+              <option value="shed">🐍 Shed</option>
+              <option value="health">🏥 Health Check</option>
+              <option value="clean">🧹 Enclosure Clean</option>
+              <option value="handle">🤝 Handling Session</option>
+              <option value="vet">🩺 Vet Visit</option>
+              <option value="note">📝 General Note</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Details</label>
+            <textarea id="care-notes" placeholder="e.g. Complete shed, came off in one piece including eye caps. Humidity was 65% during shed week..."></textarea>
+          </div>
+        </div>
+        <button class="btn btn-green" onclick="logCare()">Log Event</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Shed Tracker</div>
+        <div style="margin-bottom:16px;">
+          <div class="stat-label" style="margin-bottom:8px;">Last Shed</div>
+          <div class="countdown" id="shed-date-display">No shed logged</div>
+        </div>
+        <div class="divider"></div>
+        <div class="stat-label" style="margin-bottom:8px;">Shed Tips</div>
+        <div class="care-rows">
+          <div class="care-row"><span class="cr-label">Watch for</span><span class="cr-val">Blue/cloudy eyes</span></div>
+          <div class="care-row"><span class="cr-label">Set up</span><span class="cr-val">Moist hide w/ moss</span></div>
+          <div class="care-row"><span class="cr-label">Bump humidity to</span><span class="cr-val">60–70%</span></div>
+          <div class="care-row"><span class="cr-label">No handling</span><span class="cr-val">During entire shed</span></div>
+          <div class="care-row"><span class="cr-label">Check for</span><span class="cr-val">Complete shed + eye caps</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Care History</div>
+      <div class="log-entries" id="care-log">
+        <div class="empty-state">
+          <div class="es-icon">📋</div>
+          <div class="es-text">No care events logged yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARE GUIDE -->
+  <div id="page-guide" class="page">
+    <div class="section-header">
+      <div class="section-title">Care Guide</div>
+    </div>
+
+    <div class="alert alert-pink">🌡️ Always verify temperatures with your thermometer — aim for basking 90–95°F, cool side 75–80°F, never below 70°F at night.</div>
+    <div class="alert alert-green">💧 Keep humidity 30–50%. Bump to 60–70% only during shed. Run AC to control Alabama humidity spikes.</div>
+
+    <div class="care-grid">
+      <div class="care-card">
+        <div class="care-card-icon">🌡️</div>
+        <h3>Temperature</h3>
+        <div class="care-rows">
+          <div class="care-row"><span class="cr-label">Basking spot</span><span class="cr-val">90–95°F</span></div>
+          <div class="care-row"><span class="cr-label">Warm side</span><span class="cr-val">85–90°F</span></div>
+          <div class="care-row"><span class="cr-label">Cool side</span><span class="cr-val">75–80°F</span></div>
+          <div class="care-row"><span class="cr-label">Night minimum</span><span class="cr-val">70°F</span></div>
+          <div class="care-row"><span class="cr-label">Thermostat</span><span class="cr-val">Required</span></div>
+        </div>
+      </div>
+      <div class="care-card">
+        <div class="care-card-icon">💧</div>
+        <h3>Humidity & Lighting</h3>
+        <div class="care-rows">
+          <div class="care-row"><span class="cr-label">General humidity</span><span class="cr-val">30–50%</span></div>
+          <div class="care-row"><span class="cr-label">During shed</span><span class="cr-val">60–70%</span></div>
+          <div class="care-row"><span class="cr-label">UVB</span><span class="cr-val">5% T8/T5</span></div>
+          <div class="care-row"><span class="cr-label">Light cycle</span><span class="cr-val">10–12 hrs/day</span></div>
+          <div class="care-row"><span class="cr-label">Night</span><span class="cr-val">Complete darkness</span></div>
+        </div>
+      </div>
+      <div class="care-card">
+        <div class="care-card-icon">🏠</div>
+        <h3>Enclosure</h3>
+        <div class="care-rows">
+          <div class="care-row"><span class="cr-label">Size</span><span class="cr-val">20 gallon (permanent)</span></div>
+          <div class="care-row"><span class="cr-label">Substrate</span><span class="cr-val">Aspen, 4in deep</span></div>
+          <div class="care-row"><span class="cr-label">Hides</span><span class="cr-val">Warm + cool side</span></div>
+          <div class="care-row"><span class="cr-label">Moist hide</span><span class="cr-val">Cool side (shed)</span></div>
+          <div class="care-row"><span class="cr-label">Full clean</span><span class="cr-val">Every 2–3 months</span></div>
+        </div>
+      </div>
+      <div class="care-card">
+        <div class="care-card-icon">🐭</div>
+        <h3>Feeding</h3>
+        <div class="care-rows">
+          <div class="care-row"><span class="cr-label">Current prey</span><span class="cr-val">Sm. Pinky (2–3g)</span></div>
+          <div class="care-row"><span class="cr-label">Frequency</span><span class="cr-val">Every 5 days</span></div>
+          <div class="care-row"><span class="cr-label">Prey temp</span><span class="cr-val">~100°F before offering</span></div>
+          <div class="care-row"><span class="cr-label">Method</span><span class="cr-val">Tongs + feeding dish</span></div>
+          <div class="care-row"><span class="cr-label">No handling</span><span class="cr-val">48hrs after feeding</span></div>
+        </div>
+      </div>
+      <div class="care-card">
+        <div class="care-card-icon">🤝</div>
+        <h3>Handling</h3>
+        <div class="care-rows">
+          <div class="care-row"><span class="cr-label">Start after</span><span class="cr-val">3–4 consecutive meals</span></div>
+          <div class="care-row"><span class="cr-label">Frequency</span><span class="cr-val">3–4x per week</span></div>
+          <div class="care-row"><span class="cr-label">Session length</span><span class="cr-val">10–15 mins</span></div>
+          <div class="care-row"><span class="cr-label">Avoid</span><span class="cr-val">48hrs post-feeding</span></div>
+          <div class="care-row"><span class="cr-label">Avoid</span><span class="cr-val">During blue/shed phase</span></div>
+        </div>
+      </div>
+      <div class="care-card">
+        <div class="care-card-icon">🏥</div>
+        <h3>Health Watch</h3>
+        <div class="care-rows">
+          <div class="care-row"><span class="cr-label">Respiratory</span><span class="cr-val">Watch for wheezing</span></div>
+          <div class="care-row"><span class="cr-label">Mouth rot</span><span class="cr-label">Swollen face/lips</span></div>
+          <div class="care-row"><span class="cr-label">Mites</span><span class="cr-val">Tiny dots near eyes</span></div>
+          <div class="care-row"><span class="cr-label">Retained shed</span><span class="cr-val">Soak in warm water</span></div>
+          <div class="care-row"><span class="cr-label">Weigh</span><span class="cr-val">Every 2 weeks</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="page-profile" class="page">
+    <div class="section-header">
+      <div class="section-title">Sudo's Profile</div>
+    </div>
+
+    <div class="profile-grid">
+      <div>
+        <div class="profile-card" style="margin-bottom:16px;">
+          <div class="profile-avatar">🐍</div>
+          <div class="profile-name">Sudo</div>
+          <div class="profile-species">Western Hognose Snake</div>
+          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+            <span class="tag tag-grey">Male</span>
+            <span class="tag tag-pink">Axanthic Conda</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Quick Stats</div>
+          <div class="profile-stats">
+            <div class="profile-stat"><span class="ps-label">Birth Date</span><span>August 2025</span></div>
+            <div class="profile-stat"><span class="ps-label">Acquired</span><span id="profile-acquired">—</span></div>
+            <div class="profile-stat"><span class="ps-label">Current Weight</span><span id="profile-weight">— g</span></div>
+            <div class="profile-stat"><span class="ps-label">Total Feedings</span><span id="profile-feeds">0</span></div>
+            <div class="profile-stat"><span class="ps-label">Last Shed</span><span id="profile-shed">—</span></div>
+            <div class="profile-stat"><span class="ps-label">Breeder</span><span>Alabama Local</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-fields">
+        <div class="card-title" style="margin-bottom:20px;">Edit Profile Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date Acquired</label>
+            <input type="date" id="profile-acquired-input">
+          </div>
+          <div class="form-group">
+            <label>Purchase Price</label>
+            <input type="text" id="profile-price" placeholder="e.g. $300">
+          </div>
+          <div class="form-group">
+            <label>Breeder Name</label>
+            <input type="text" id="profile-breeder" placeholder="e.g. Alabama Local Breeder">
+          </div>
+          <div class="form-group">
+            <label>Vet Name</label>
+            <input type="text" id="profile-vet" placeholder="e.g. Reptile Vet Name">
+          </div>
+          <div class="form-group">
+            <label>Vet Phone</label>
+            <input type="text" id="profile-vet-phone" placeholder="e.g. (256) 000-0000">
+          </div>
+          <div class="form-group">
+            <label>Enclosure Size</label>
+            <input type="text" id="profile-enclosure" value="20 Gallon (30x12x12)">
+          </div>
+          <div class="form-group full">
+            <label>Morph Details</label>
+            <textarea id="profile-morph" placeholder="Purple Line Axanthic Conda 66% Het Albino">Purple Line Axanthic Conda 66% Het Albino — Born August 2025. Twin to "George". Produced by Alabama local breeder. Pairing: Purple Line Conda Double Het Snow (JMG) x Purple Line Superconda Double Het.</textarea>
+          </div>
+          <div class="form-group full">
+            <label>Notes</label>
+            <textarea id="profile-notes" placeholder="Any additional notes about Sudo..."></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+        <button class="btn btn-secondary" style="margin-left:8px;" onclick="exportData()">Export Data (JSON)</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // ── Storage ──────────────────────────────────────────────────────────────
+  const DB = {
+    get: (k) => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } },
+    getObj: (k) => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch { return {}; } },
+    set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+  };
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    event.target.classList.add('active');
+    if (id === 'dashboard') updateDashboard();
+    if (id === 'weight') renderWeightChart();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function today() { return new Date().toISOString().split('T')[0]; }
+  function fmtDate(d) {
+    if (!d) return '—';
+    const dt = new Date(d + 'T12:00:00');
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function daysSince(d) {
+    if (!d) return null;
+    const diff = new Date() - new Date(d + 'T12:00:00');
+    return Math.floor(diff / 86400000);
+  }
+  function daysUntil(d) {
+    if (!d) return null;
+    const diff = new Date(d + 'T12:00:00') - new Date();
+    return Math.ceil(diff / 86400000);
+  }
+
+  // Set default dates
+  document.getElementById('feed-date').value = today();
+  document.getElementById('weight-date').value = today();
+  document.getElementById('care-date').value = today();
+
+  // ── Feeding ───────────────────────────────────────────────────────────────
+  function logFeeding() {
+    const date = document.getElementById('feed-date').value;
+    const prey = document.getElementById('feed-prey').value;
+    const result = document.getElementById('feed-result').value;
+    const weight = document.getElementById('feed-weight').value;
+    const notes = document.getElementById('feed-notes').value;
+    if (!date) return alert('Please select a date.');
+    const feeds = DB.get('feeds');
+    feeds.unshift({ id: Date.now(), date, prey, result, weight, notes });
+    DB.set('feeds', feeds);
+    if (weight) {
+      const weights = DB.get('weights');
+      weights.unshift({ id: Date.now(), date, weight: parseFloat(weight), notes: 'Logged with feeding' });
+      DB.set('weights', weights);
+    }
+    document.getElementById('feed-notes').value = '';
+    document.getElementById('feed-weight').value = '';
+    renderFeedingLog();
+    updateDashboard();
+  }
+
+  function renderFeedingLog() {
+    const feeds = DB.get('feeds');
+    const el = document.getElementById('feeding-log');
+    if (!feeds.length) {
+      el.innerHTML = '<div class="empty-state"><div class="es-icon">🐭</div><div class="es-text">No feedings logged yet.</div></div>';
+      return;
+    }
+    const icons = { ate: '✅', refused: '❌', partial: '⚠️' };
+    el.innerHTML = feeds.map(f => `
+      <div class="log-entry">
+        <div class="entry-icon icon-feed">🐭</div>
+        <div class="entry-content">
+          <div class="entry-title">${icons[f.result] || '✅'} ${f.prey}</div>
+          <div class="entry-detail">${f.weight ? f.weight + 'g · ' : ''}${f.notes || 'No notes'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div class="entry-date">${fmtDate(f.date)}</div>
+          <button class="delete-btn" onclick="deleteEntry('feeds',${f.id})">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Weight ────────────────────────────────────────────────────────────────
+  function logWeight() {
+    const date = document.getElementById('weight-date').value;
+    const weight = parseFloat(document.getElementById('weight-value').value);
+    const notes = document.getElementById('weight-notes').value;
+    if (!date || !weight) return alert('Please enter date and weight.');
+    const weights = DB.get('weights');
+    weights.unshift({ id: Date.now(), date, weight, notes });
+    DB.set('weights', weights);
+    document.getElementById('weight-value').value = '';
+    document.getElementById('weight-notes').value = '';
+    renderWeightLog();
+    renderWeightChart();
+    updateDashboard();
+  }
+
+  function renderWeightLog() {
+    const weights = DB.get('weights');
+    const el = document.getElementById('weight-log');
+    if (!weights.length) {
+      el.innerHTML = '<div class="empty-state"><div class="es-icon">⚖️</div><div class="es-text">No weights logged yet.</div></div>';
+      return;
+    }
+    el.innerHTML = weights.map((w, i) => {
+      const prev = weights[i + 1];
+      const diff = prev ? (w.weight - prev.weight).toFixed(1) : null;
+      const diffStr = diff ? (diff > 0 ? `+${diff}g` : `${diff}g`) : '';
+      const diffColor = diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--pink)' : '';
+      return `
+        <div class="log-entry">
+          <div class="entry-icon icon-weight">⚖️</div>
+          <div class="entry-content">
+            <div class="entry-title">${w.weight}g ${diffStr ? `<span style="color:${diffColor};font-size:0.65rem;">${diffStr}</span>` : ''}</div>
+            <div class="entry-detail">${w.notes || 'No notes'}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <div class="entry-date">${fmtDate(w.date)}</div>
+            <button class="delete-btn" onclick="deleteEntry('weights',${w.id})">✕</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderWeightChart() {
+    const weights = DB.get('weights').slice().reverse();
+    const container = document.getElementById('weight-chart-container');
+    if (weights.length < 2) {
+      container.innerHTML = '<div class="empty-state"><div class="es-icon">📈</div><div class="es-text">Log at least 2 weights to see chart</div></div>';
+      return;
+    }
+    const vals = weights.map(w => w.weight);
+    const min = Math.min(...vals) * 0.9;
+    const max = Math.max(...vals) * 1.1;
+    const w = 100, h = 100;
+    const pts = vals.map((v, i) => {
+      const x = (i / (vals.length - 1)) * w;
+      const y = h - ((v - min) / (max - min)) * h;
+      return `${x},${y}`;
+    }).join(' ');
+    container.innerHTML = `
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:140px;">
+        <defs>
+          <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#d4847a" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#d4847a" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <polyline points="${pts}" fill="none" stroke="#d4847a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <polygon points="0,100 ${pts} 100,100" fill="url(#wg)"/>
+        ${vals.map((v, i) => {
+          const x = (i / (vals.length - 1)) * w;
+          const y = h - ((v - min) / (max - min)) * h;
+          return `<circle cx="${x}" cy="${y}" r="2" fill="#d4847a"/>`;
+        }).join('')}
+      </svg>
+      <div style="display:flex;justify-content:space-between;font-size:0.55rem;color:var(--text-light);padding:0 4px;">
+        <span>${fmtDate(weights[0].date)}</span>
+        <span>${fmtDate(weights[weights.length-1].date)}</span>
+      </div>
+    `;
+  }
+
+  // ── Care ──────────────────────────────────────────────────────────────────
+  function logCare() {
+    const date = document.getElementById('care-date').value;
+    const type = document.getElementById('care-type').value;
+    const notes = document.getElementById('care-notes').value;
+    if (!date) return alert('Please select a date.');
+    const cares = DB.get('cares');
+    cares.unshift({ id: Date.now(), date, type, notes });
+    DB.set('cares', cares);
+    document.getElementById('care-notes').value = '';
+    renderCareLog();
+    updateDashboard();
+  }
+
+  function renderCareLog() {
+    const cares = DB.get('cares');
+    const el = document.getElementById('care-log');
+    if (!cares.length) {
+      el.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><div class="es-text">No care events logged yet.</div></div>';
+      return;
+    }
+    const icons = { shed: '🐍', health: '🏥', clean: '🧹', handle: '🤝', vet: '🩺', note: '📝' };
+    const iconClass = { shed: 'icon-shed', health: 'icon-health', clean: 'icon-weight', handle: 'icon-feed', vet: 'icon-health', note: 'icon-note' };
+    el.innerHTML = cares.map(c => `
+      <div class="log-entry">
+        <div class="entry-icon ${iconClass[c.type] || 'icon-note'}">${icons[c.type] || '📝'}</div>
+        <div class="entry-content">
+          <div class="entry-title">${c.type.charAt(0).toUpperCase() + c.type.slice(1)}</div>
+          <div class="entry-detail">${c.notes || 'No notes'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div class="entry-date">${fmtDate(c.date)}</div>
+          <button class="delete-btn" onclick="deleteEntry('cares',${c.id})">✕</button>
+        </div>
+      </div>
+    `).join('');
+
+    // Update shed display
+    const sheds = cares.filter(c => c.type === 'shed');
+    const shedEl = document.getElementById('shed-date-display');
+    if (sheds.length) {
+      shedEl.textContent = fmtDate(sheds[0].date) + ' · ' + daysSince(sheds[0].date) + ' days ago';
+    }
+  }
+
+  // ── Quick Note ────────────────────────────────────────────────────────────
+  function addQuickNote() {
+    const note = document.getElementById('quick-note').value.trim();
+    if (!note) return;
+    const cares = DB.get('cares');
+    cares.unshift({ id: Date.now(), date: today(), type: 'note', notes: note });
+    DB.set('cares', cares);
+    document.getElementById('quick-note').value = '';
+    updateDashboard();
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  function deleteEntry(store, id) {
+    const items = DB.get(store).filter(i => i.id !== id);
+    DB.set(store, items);
+    renderFeedingLog(); renderWeightLog(); renderCareLog(); updateDashboard();
+  }
+
+  // ── Dashboard ─────────────────────────────────────────────────────────────
+  function updateDashboard() {
+    const feeds = DB.get('feeds');
+    const weights = DB.get('weights');
+    const cares = DB.get('cares');
+
+    // Weight
+    if (weights.length) {
+      const latest = weights[0];
+      document.getElementById('dash-weight').innerHTML = latest.weight + '<span class="stat-unit">g</span>';
+      document.getElementById('dash-weight-date').textContent = fmtDate(latest.date);
+      document.getElementById('profile-weight').textContent = latest.weight + 'g';
+    }
+
+    // Feeding
+    document.getElementById('dash-total-feeds').textContent = feeds.filter(f => f.result === 'ate').length;
+    document.getElementById('profile-feeds').textContent = feeds.length;
+    if (feeds.length) {
+      const last = feeds[0];
+      document.getElementById('dash-last-feed').textContent = 'Last: ' + fmtDate(last.date);
+      const nextDate = new Date(last.date + 'T12:00:00');
+      nextDate.setDate(nextDate.getDate() + 5);
+      const nextStr = nextDate.toISOString().split('T')[0];
+      const days = daysUntil(nextStr);
+      if (days <= 0) {
+        document.getElementById('dash-next-feed').textContent = 'Today!';
+        document.getElementById('check-feed').textContent = 'Due Today';
+        document.getElementById('check-feed').className = 'care-status status-due';
+      } else {
+        document.getElementById('dash-next-feed').textContent = 'In ' + days + ' day' + (days !== 1 ? 's' : '');
+        document.getElementById('check-feed').textContent = 'In ' + days + 'd';
+        document.getElementById('check-feed').className = 'care-status status-good';
+      }
+    }
+
+    // Shed
+    const sheds = cares.filter(c => c.type === 'shed');
+    if (sheds.length) {
+      const last = sheds[0];
+      document.getElementById('dash-last-shed').textContent = fmtDate(last.date);
+      document.getElementById('dash-shed-days').textContent = daysSince(last.date) + ' days ago';
+      document.getElementById('profile-shed').textContent = fmtDate(last.date);
+    }
+
+    // Recent activity
+    const all = [
+      ...feeds.map(f => ({ ...f, _type: 'feed' })),
+      ...weights.map(w => ({ ...w, _type: 'weight' })),
+      ...cares.map(c => ({ ...c, _type: 'care' })),
+    ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+
+    const actEl = document.getElementById('recent-activity');
+    if (!all.length) {
+      actEl.innerHTML = '<div class="empty-state"><div class="es-icon">✿</div><div class="es-text">No activity logged yet</div></div>';
+      return;
+    }
+    const icons2 = { feed: { dot: 'dot-pink', icon: '🐭', label: (i) => i.prey },
+                     weight: { dot: 'dot-grey', icon: '⚖️', label: (i) => i.weight + 'g' },
+                     care: { dot: 'dot-green', icon: '📝', label: (i) => i.type } };
+    actEl.innerHTML = all.map(a => {
+      const cfg = icons2[a._type];
+      return `<div class="quick-item">
+        <div class="quick-dot ${cfg.dot}"></div>
+        <span>${cfg.icon} ${cfg.label(a)}</span>
+        <span class="quick-item-date">${fmtDate(a.date)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Profile ───────────────────────────────────────────────────────────────
+  function saveProfile() {
+    const profile = {
+      acquired: document.getElementById('profile-acquired-input').value,
+      price: document.getElementById('profile-price').value,
+      breeder: document.getElementById('profile-breeder').value,
+      vet: document.getElementById('profile-vet').value,
+      vetPhone: document.getElementById('profile-vet-phone').value,
+      enclosure: document.getElementById('profile-enclosure').value,
+      morph: document.getElementById('profile-morph').value,
+      notes: document.getElementById('profile-notes').value,
+    };
+    DB.set('profile', profile);
+    if (profile.acquired) {
+      document.getElementById('profile-acquired').textContent = fmtDate(profile.acquired);
+    }
+    alert('Profile saved!');
+  }
+
+  function loadProfile() {
+    const p = DB.getObj('profile');
+    if (p.acquired) {
+      document.getElementById('profile-acquired-input').value = p.acquired;
+      document.getElementById('profile-acquired').textContent = fmtDate(p.acquired);
+    }
+    if (p.price) document.getElementById('profile-price').value = p.price;
+    if (p.breeder) document.getElementById('profile-breeder').value = p.breeder;
+    if (p.vet) document.getElementById('profile-vet').value = p.vet;
+    if (p.vetPhone) document.getElementById('profile-vet-phone').value = p.vetPhone;
+    if (p.enclosure) document.getElementById('profile-enclosure').value = p.enclosure;
+    if (p.morph) document.getElementById('profile-morph').value = p.morph;
+    if (p.notes) document.getElementById('profile-notes').value = p.notes;
+  }
+
+  function exportData() {
+    const data = {
+      profile: DB.getObj('profile'),
+      feeds: DB.get('feeds'),
+      weights: DB.get('weights'),
+      cares: DB.get('cares'),
+      exported: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'sudo-care-log.json';
+    a.click();
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadProfile();
+  renderFeedingLog();
+  renderWeightLog();
+  renderCareLog();
+  updateDashboard();
+</script>
+</body>
+</html>
