@@ -104,6 +104,7 @@
     margin-top: -4px;
   }
 
+  /* Desktop nav */
   nav {
     display: flex;
     gap: 4px;
@@ -128,6 +129,88 @@
     background: var(--pink-pale);
     border-color: var(--pink-light);
     color: var(--pink);
+  }
+
+  /* Hamburger menu */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    transition: all 0.2s;
+  }
+
+  .hamburger:hover { background: var(--bg); }
+
+  .hamburger span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--text-muted);
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* Mobile dropdown */
+  .mobile-menu {
+    display: none;
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    z-index: 200;
+    padding: 8px 16px 16px;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-menu.open { display: flex; }
+
+  .mobile-nav-btn {
+    padding: 12px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+  }
+
+  .mobile-nav-btn:hover { background: var(--bg); color: var(--text); }
+  .mobile-nav-btn.active {
+    background: var(--pink-pale);
+    border-color: var(--pink-light);
+    color: var(--pink);
+  }
+
+  /* Current page label in header for mobile */
+  .current-page-label {
+    display: none;
+    font-size: 0.65rem;
+    color: var(--pink);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 8px;
   }
 
   /* Main layout */
@@ -729,6 +812,12 @@
     .profile-grid { grid-template-columns: 1fr; }
     .form-grid { grid-template-columns: 1fr; }
     nav { display: none; }
+    .hamburger { display: flex; }
+    .current-page-label { display: block; }
+    header { padding: 0 16px; }
+    main { padding: 16px 12px; }
+    .dashboard-hero { padding: 20px; }
+    .hero-name { font-size: 2.2rem; }
   }
 
   /* Floral decoration */
@@ -757,14 +846,31 @@
         <div class="logo-sub">Hognose Care Log</div>
       </div>
     </div>
+    <!-- Desktop nav -->
     <nav>
-      <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
-      <button class="nav-btn" onclick="showPage('feeding')">Feeding</button>
-      <button class="nav-btn" onclick="showPage('weight')">Weight</button>
-      <button class="nav-btn" onclick="showPage('care')">Care</button>
-      <button class="nav-btn" onclick="showPage('guide')">Guide</button>
-      <button class="nav-btn" onclick="showPage('profile')">Profile</button>
+      <button class="nav-btn active" onclick="showPage('dashboard', this)">Dashboard</button>
+      <button class="nav-btn" onclick="showPage('feeding', this)">Feeding</button>
+      <button class="nav-btn" onclick="showPage('weight', this)">Weight</button>
+      <button class="nav-btn" onclick="showPage('care', this)">Care</button>
+      <button class="nav-btn" onclick="showPage('guide', this)">Guide</button>
+      <button class="nav-btn" onclick="showPage('profile', this)">Profile</button>
     </nav>
+    <!-- Mobile right side -->
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="current-page-label" id="current-page-label">Dashboard</span>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile dropdown -->
+  <div class="mobile-menu" id="mobile-menu">
+    <button class="mobile-nav-btn active" onclick="showPage('dashboard', this)">🏠 Dashboard</button>
+    <button class="mobile-nav-btn" onclick="showPage('feeding', this)">🐭 Feeding Log</button>
+    <button class="mobile-nav-btn" onclick="showPage('weight', this)">⚖️ Weight Tracker</button>
+    <button class="mobile-nav-btn" onclick="showPage('care', this)">📋 Care Log</button>
+    <button class="mobile-nav-btn" onclick="showPage('guide', this)">📖 Care Guide</button>
+    <button class="mobile-nav-btn" onclick="showPage('profile', this)">🐍 Profile</button>
   </div>
 </header>
 
@@ -1221,14 +1327,45 @@
   };
 
   // ── Navigation ────────────────────────────────────────────────────────────
-  function showPage(id) {
+  function showPage(id, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
-    event.target.classList.add('active');
+    // Activate both desktop and mobile equivalents
+    document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(b => {
+      if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + id + "'")) {
+        b.classList.add('active');
+      }
+    });
+    // Update mobile label
+    const labels = { dashboard: 'Dashboard', feeding: 'Feeding', weight: 'Weight', care: 'Care', guide: 'Guide', profile: 'Profile' };
+    document.getElementById('current-page-label').textContent = labels[id] || id;
+    // Close mobile menu
+    closeMobileMenu();
     if (id === 'dashboard') updateDashboard();
     if (id === 'weight') renderWeightChart();
   }
+
+  function toggleMenu() {
+    const menu = document.getElementById('mobile-menu');
+    const btn = document.getElementById('hamburger');
+    menu.classList.toggle('open');
+    btn.classList.toggle('open');
+  }
+
+  function closeMobileMenu() {
+    document.getElementById('mobile-menu').classList.remove('open');
+    document.getElementById('hamburger').classList.remove('open');
+  }
+
+  // Close menu when clicking outside
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('mobile-menu');
+    const hamburger = document.getElementById('hamburger');
+    if (!menu.contains(e.target) && !hamburger.contains(e.target)) {
+      closeMobileMenu();
+    }
+  });
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   function today() { return new Date().toISOString().split('T')[0]; }
